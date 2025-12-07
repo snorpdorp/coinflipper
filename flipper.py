@@ -92,7 +92,7 @@ def main():
 
     # True posterior curve
     plt.plot(p, post_pdf, color="blue", linewidth=2,
-             label=f"Posterior Beta({alpha_post},{beta_post})")
+             label=f"Posterior Beta({alpha_post},{beta_post}) (Analytical solution with Laplace Smoothing)")
 
     # Likelihood
     plt.plot(p, likelihood, color="gray", linestyle="--",
