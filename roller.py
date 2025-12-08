@@ -105,12 +105,12 @@ def main():
 
         means = jiggle_means.mean(axis=0)
         stdevs = jiggle_means.std(axis=0, ddof=1)
-        sigmas = stdevs * sqrt(J/(J-1))
+        scales = stdevs * sqrt(J/(J-1))  # Use student scale param, not gaussian sigma param
 
         last_means = means
         last_stdevs = stdevs
 
-        z = (means - p_true) / sigmas
+        z = (means - p_true) / scales
         for face in range(K):
             zscores_by_face[face].append(z[face])
 
@@ -199,11 +199,11 @@ def main():
         amplitude_err, mean_err, stddev_err = perr
 
         # Fit a t-distribution to the z-scores
-        df = J - 1
-        df, loc, scale = t.fit(zscores_by_face[face], fdf=df)  # Unpack the four returned values
+        df, loc, scale = t.fit(zscores_by_face[face])  # Unpack the four returned values
 
         # Generate the t-distribution PDF
         t_pdf = t.pdf(bin_centers, df, loc, scale)
+        t2_pdf = t.pdf(bin_centers, df=J-1, loc=0.0, scale=1.0)
 
         # Plot the histogram and Gaussian fit
         plt.hist(zscores_by_face[face], bins=100, range=(-6, 6), color=colors[face], alpha=0.6, density=True, label=f"Face {face} z-scores")
@@ -215,6 +215,8 @@ def main():
 
         # Plot the t-distribution fit
         plt.plot(bin_centers, t_pdf, color='red', linestyle='-', label='t-Student fit')
+
+        plt.plot(bin_centers, t_pdf, color='green', linestyle='-.', label=f't-Student precomputed df/scale/loc = {J-1=}/1.0/0.0')
 
         # Add error bands around the Gaussian fit
         y_err_upper = gaussian(x_fit, popt[0] + amplitude_err, popt[1] + mean_err, popt[2] + stddev_err)
@@ -243,10 +245,10 @@ def main():
 
         if face == 0:
             plt.title("Z-score Distributions with Gaussian and t-Student Fit")
-        # plt.yscale('log')  # Logarithmic scale on y-axis
+        plt.yscale('log')  # Logarithmic scale on y-axis
 
     # Change y-axis to log scale
-    plt.xlabel("z = (mean_jiggle - p_true) / sigma_jiggle")
+    plt.xlabel("z = (mean_jiggle - p_true) / scale_jiggle")
     plt.tight_layout()
     plt.show()
 
