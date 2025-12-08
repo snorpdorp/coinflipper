@@ -2,7 +2,7 @@
 import argparse
 import numpy as np
 import matplotlib.pyplot as plt
-from scipy.stats import norm
+from scipy.stats import norm, t
 from scipy.optimize import curve_fit
 
 # Parse command-line arguments
@@ -171,7 +171,7 @@ def main():
     plt.show()
 
     # ------------------------------------------------------------------
-    # FIGURE 2 — Z-score histograms across JR rounds with Gaussian Fit and Error Bars
+    # FIGURE 2 — Z-score histograms across JR rounds with Gaussian and t-Student Fit
     # ------------------------------------------------------------------
     plt.figure(figsize=(14, 10))
 
@@ -186,7 +186,6 @@ def main():
         counts, bin_edges = np.histogram(zscores_by_face[face], bins=100, range=(-6, 6), density=True)
         bin_centers = (bin_edges[:-1] + bin_edges[1:]) / 2  # Midpoints of the bins
         
-        
         # Estimate the amplitude (integral of the histogram, assuming the area under the curve should be 1)
         amplitude = np.sum(counts) * (bin_edges[1] - bin_edges[0])
         
@@ -197,15 +196,22 @@ def main():
         perr = np.sqrt(np.diag(pcov))
         amplitude_err, mean_err, stddev_err = perr
 
-        # Plot the histogram and the Gaussian fit
+        # Fit a t-distribution to the z-scores
+        df, loc, scale = t.fit(zscores_by_face[face])  # Unpack the four returned values
+
+        # Generate the t-distribution PDF
+        t_pdf = t.pdf(bin_centers, df, loc, scale)
+
+        # Plot the histogram and Gaussian fit
         plt.hist(zscores_by_face[face], bins=100, range=(-6, 6), color=colors[face], alpha=0.6, density=True, label=f"Face {face} z-scores")
         
-        # Generate the fitted Gaussian curve
+        # Plot the Gaussian fit
         x_fit = np.linspace(min(bin_centers), max(bin_centers), 1000)
         y_fit = gaussian(x_fit, *popt)
-        
-        # Plot the Gaussian fit
         plt.plot(x_fit, y_fit, color='black', linestyle='--', label='Gaussian fit')
+
+        # Plot the t-distribution fit
+        plt.plot(bin_centers, t_pdf, color='red', linestyle='-', label='t-Student fit')
 
         # Add error bands around the Gaussian fit
         y_err_upper = gaussian(x_fit, popt[0] + amplitude_err, popt[1] + mean_err, popt[2] + stddev_err)
@@ -226,10 +232,17 @@ def main():
         plt.text(0.05, 0.85, mu_text, transform=plt.gca().transAxes, fontsize=12, verticalalignment='top')
         plt.text(0.05, 0.75, sigma_text, transform=plt.gca().transAxes, fontsize=12, verticalalignment='top')
 
+        # Display t-Student parameters
+        df_text = f"$df = {df:.2f}$"
+        scale_text = f"$\\sigma = {scale:.2f}$"
+        plt.text(0.05, 0.65, df_text, transform=plt.gca().transAxes, fontsize=12, verticalalignment='top')
+        plt.text(0.05, 0.55, scale_text, transform=plt.gca().transAxes, fontsize=12, verticalalignment='top')
+
         if face == 0:
-            plt.title("Z-score Distributions Across Jiggle Rounds with Gaussian Fit and Error Bars")
+            plt.title("Z-score Distributions with Gaussian and t-Student Fit")
         plt.yscale('log')  # Logarithmic scale on y-axis
 
+    # Change y-axis to log scale
     plt.xlabel("z = (mean_jiggle - p_true) / sigma_jiggle")
     plt.tight_layout()
     plt.show()
