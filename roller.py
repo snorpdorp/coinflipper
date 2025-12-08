@@ -244,7 +244,13 @@ def main():
         plt.text(0.05, 0.45, scale_text, transform=plt.gca().transAxes, fontsize=12, verticalalignment='top')
 
         if face == 0:
-            plt.title("Z-score Distributions with Gaussian and t-Student Fit")
+            params_text = (
+                f"N={N}, "
+                f"J={J}, "
+                f"JR={JR}, "
+                f"probs={p_true.tolist()}"
+            )
+            plt.title(f"Z-score Distributions with Gaussian and t-Student Fit\n{params_text}")
         plt.yscale('log')  # Logarithmic scale on y-axis
 
     # Change y-axis to log scale
