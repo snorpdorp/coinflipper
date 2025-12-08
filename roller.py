@@ -2,8 +2,10 @@
 import argparse
 import numpy as np
 import matplotlib.pyplot as plt
+from scipy.stats import norm
+from scipy.optimize import curve_fit
 
-
+# Parse command-line arguments
 def parse_arguments():
     parser = argparse.ArgumentParser(
         description="Simulate biased die rolls and plot posterior distributions."
@@ -40,6 +42,9 @@ def parse_arguments():
 
     return parser.parse_args()
 
+# Gaussian function for fitting
+def gaussian(x, amplitude, mean, stddev):
+    return amplitude * np.exp(-0.5 * ((x - mean) / stddev) ** 2)
 
 def main():
     args = parse_arguments()
@@ -165,33 +170,60 @@ def main():
     plt.tight_layout()
     plt.show()
 
-
     # ------------------------------------------------------------------
-    # FIGURE 2 — Z-score histograms across JR rounds
+    # FIGURE 2 — Z-score histograms across JR rounds with Gaussian Fit and Error Bars
     # ------------------------------------------------------------------
     plt.figure(figsize=(14, 10))
 
     for face in range(K):
         plt.subplot(K, 1, face + 1)
-        plt.hist(
-            zscores_by_face[face],
-            bins=25,
-            color=colors[face],
-            alpha=0.6,
-            density=True,
-            label=f"Face {face} z-scores"
-        )
+        
+        # Create a histogram of the z-scores
+        counts, bin_edges = np.histogram(zscores_by_face[face], bins=25, density=True)
+        bin_centers = (bin_edges[:-1] + bin_edges[1:]) / 2  # Midpoints of the bins
+        
+        # Compute the mean and standard deviation of the z-scores
+        z_mean = np.mean(zscores_by_face[face])
+        z_std = np.std(zscores_by_face[face], ddof=1)
+        
+        # Estimate the amplitude (integral of the histogram, assuming the area under the curve should be 1)
+        amplitude = np.sum(counts) * (bin_edges[1] - bin_edges[0])
+        
+        # Fit a Gaussian function to the data and get the covariance matrix
+        popt, pcov = curve_fit(gaussian, bin_centers, counts, p0=[amplitude, z_mean, z_std])
+
+        # Calculate the standard errors of the parameters from the covariance matrix
+        perr = np.sqrt(np.diag(pcov))
+        amplitude_err, mean_err, stddev_err = perr
+
+        # Plot the histogram and the Gaussian fit
+        plt.hist(zscores_by_face[face], bins=25, color=colors[face], alpha=0.6, density=True, label=f"Face {face} z-scores")
+        
+        # Generate the fitted Gaussian curve
+        x_fit = np.linspace(min(bin_centers), max(bin_centers), 1000)
+        y_fit = gaussian(x_fit, *popt)
+        
+        # Plot the Gaussian fit
+        plt.plot(x_fit, y_fit, color='black', linestyle='--', label='Gaussian fit')
+
+        # Add error bands around the Gaussian fit
+        y_err_upper = gaussian(x_fit, popt[0] + amplitude_err, popt[1] + mean_err, popt[2] + stddev_err)
+        y_err_lower = gaussian(x_fit, popt[0] - amplitude_err, popt[1] - mean_err, popt[2] - stddev_err)
+        plt.fill_between(x_fit, y_err_lower, y_err_upper, color='gray', alpha=0.3, label='Fit error range')
+
+        # Add a vertical line at 0 to indicate where the true value is
         plt.axvline(0, color="black", linestyle="--")
+        
+        # Labels and legend
         plt.ylabel("Density")
         plt.legend()
 
         if face == 0:
-            plt.title("Z-score Distributions Across Jiggle Rounds")
+            plt.title("Z-score Distributions Across Jiggle Rounds with Gaussian Fit and Error Bars")
 
     plt.xlabel("z = (mean_jiggle - p_true) / sigma_jiggle")
     plt.tight_layout()
     plt.show()
-
 
 if __name__ == "__main__":
     main()
