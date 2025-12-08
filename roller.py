@@ -103,7 +103,7 @@ def main():
             first_round_jiggle_means = jiggle_means.copy()
 
         means = jiggle_means.mean(axis=0)
-        stdevs = jiggle_means.std(axis=0, ddof=1)
+        stdevs = jiggle_means.std(axis=0, ddof=2)
 
         last_means = means
         last_stdevs = stdevs
@@ -184,7 +184,7 @@ def main():
         
         # Compute the mean and standard deviation of the z-scores
         z_mean = np.mean(zscores_by_face[face])
-        z_std = np.std(zscores_by_face[face], ddof=1)
+        z_std = np.std(zscores_by_face[face], ddof=2)
         
         # Estimate the amplitude (integral of the histogram, assuming the area under the curve should be 1)
         amplitude = np.sum(counts) * (bin_edges[1] - bin_edges[0])
