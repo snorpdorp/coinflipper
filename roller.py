@@ -4,6 +4,7 @@ import numpy as np
 import matplotlib.pyplot as plt
 from scipy.stats import norm, t
 from scipy.optimize import curve_fit
+from math import sqrt
 
 # Parse command-line arguments
 def parse_arguments():
@@ -103,12 +104,13 @@ def main():
             first_round_jiggle_means = jiggle_means.copy()
 
         means = jiggle_means.mean(axis=0)
-        stdevs = jiggle_means.std(axis=0, ddof=2)
+        stdevs = jiggle_means.std(axis=0, ddof=1)
+        sigmas = stdevs * sqrt(J/(J-1))
 
         last_means = means
         last_stdevs = stdevs
 
-        z = (means - p_true) / stdevs
+        z = (means - p_true) / sigmas
         for face in range(K):
             zscores_by_face[face].append(z[face])
 
@@ -180,7 +182,7 @@ def main():
         
         # Compute the mean and standard deviation of the z-scores
         z_mean = np.mean(zscores_by_face[face])
-        z_std = np.std(zscores_by_face[face], ddof=2)
+        z_std = np.std(zscores_by_face[face], ddof=1)
 
         # Create a histogram of the z-scores
         counts, bin_edges = np.histogram(zscores_by_face[face], bins=100, range=(-6, 6), density=True)
@@ -197,7 +199,8 @@ def main():
         amplitude_err, mean_err, stddev_err = perr
 
         # Fit a t-distribution to the z-scores
-        df, loc, scale = t.fit(zscores_by_face[face])  # Unpack the four returned values
+        df = J - 1
+        df, loc, scale = t.fit(zscores_by_face[face], fdf=df)  # Unpack the four returned values
 
         # Generate the t-distribution PDF
         t_pdf = t.pdf(bin_centers, df, loc, scale)
@@ -235,12 +238,12 @@ def main():
         # Display t-Student parameters
         df_text = f"$df = {df:.2f}$"
         scale_text = f"$\\sigma = {scale:.2f}$"
-        plt.text(0.05, 0.65, df_text, transform=plt.gca().transAxes, fontsize=12, verticalalignment='top')
-        plt.text(0.05, 0.55, scale_text, transform=plt.gca().transAxes, fontsize=12, verticalalignment='top')
+        plt.text(0.05, 0.55, df_text, transform=plt.gca().transAxes, fontsize=12, verticalalignment='top')
+        plt.text(0.05, 0.45, scale_text, transform=plt.gca().transAxes, fontsize=12, verticalalignment='top')
 
         if face == 0:
             plt.title("Z-score Distributions with Gaussian and t-Student Fit")
-        plt.yscale('log')  # Logarithmic scale on y-axis
+        # plt.yscale('log')  # Logarithmic scale on y-axis
 
     # Change y-axis to log scale
     plt.xlabel("z = (mean_jiggle - p_true) / sigma_jiggle")
