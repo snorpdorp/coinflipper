@@ -179,7 +179,7 @@ def main():
         plt.subplot(K, 1, face + 1)
         
         # Create a histogram of the z-scores
-        counts, bin_edges = np.histogram(zscores_by_face[face], bins=25, density=True)
+        counts, bin_edges = np.histogram(zscores_by_face[face], bins=2500, density=True)
         bin_centers = (bin_edges[:-1] + bin_edges[1:]) / 2  # Midpoints of the bins
         
         # Compute the mean and standard deviation of the z-scores
@@ -197,7 +197,7 @@ def main():
         amplitude_err, mean_err, stddev_err = perr
 
         # Plot the histogram and the Gaussian fit
-        plt.hist(zscores_by_face[face], bins=25, color=colors[face], alpha=0.6, density=True, label=f"Face {face} z-scores")
+        plt.hist(zscores_by_face[face], bins=250, color=colors[face], alpha=0.6, density=True, label=f"Face {face} z-scores")
         
         # Generate the fitted Gaussian curve
         x_fit = np.linspace(min(bin_centers), max(bin_centers), 1000)
