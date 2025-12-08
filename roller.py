@@ -218,6 +218,13 @@ def main():
         plt.ylabel("Density")
         plt.legend()
 
+        # Display mu and sigma with their uncertainties
+        mu_text = f"$\\mu = {popt[1]:.2f} \\pm {mean_err:.2f}$"
+        sigma_text = f"$\\sigma = {popt[2]:.2f} \\pm {stddev_err:.2f}$"
+
+        plt.text(0.05, 0.85, mu_text, transform=plt.gca().transAxes, fontsize=12, verticalalignment='top')
+        plt.text(0.05, 0.75, sigma_text, transform=plt.gca().transAxes, fontsize=12, verticalalignment='top')
+
         if face == 0:
             plt.title("Z-score Distributions Across Jiggle Rounds with Gaussian Fit and Error Bars")
 
