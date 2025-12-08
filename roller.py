@@ -36,7 +36,7 @@ def parse_arguments():
     parser.add_argument(
         "-JR", "--jiggle_rounds",
         type=int,
-        default=50,
+        default=1000,
         help="Number of jiggle rounds (default: 50)"
     )
 
