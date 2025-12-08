@@ -178,13 +178,14 @@ def main():
     for face in range(K):
         plt.subplot(K, 1, face + 1)
         
-        # Create a histogram of the z-scores
-        counts, bin_edges = np.histogram(zscores_by_face[face], bins=2500, density=True)
-        bin_centers = (bin_edges[:-1] + bin_edges[1:]) / 2  # Midpoints of the bins
-        
         # Compute the mean and standard deviation of the z-scores
         z_mean = np.mean(zscores_by_face[face])
         z_std = np.std(zscores_by_face[face], ddof=2)
+
+        # Create a histogram of the z-scores
+        counts, bin_edges = np.histogram(zscores_by_face[face], bins=100, range=(-6, 6), density=True)
+        bin_centers = (bin_edges[:-1] + bin_edges[1:]) / 2  # Midpoints of the bins
+        
         
         # Estimate the amplitude (integral of the histogram, assuming the area under the curve should be 1)
         amplitude = np.sum(counts) * (bin_edges[1] - bin_edges[0])
@@ -197,7 +198,7 @@ def main():
         amplitude_err, mean_err, stddev_err = perr
 
         # Plot the histogram and the Gaussian fit
-        plt.hist(zscores_by_face[face], bins=250, color=colors[face], alpha=0.6, density=True, label=f"Face {face} z-scores")
+        plt.hist(zscores_by_face[face], bins=100, range=(-6, 6), color=colors[face], alpha=0.6, density=True, label=f"Face {face} z-scores")
         
         # Generate the fitted Gaussian curve
         x_fit = np.linspace(min(bin_centers), max(bin_centers), 1000)
@@ -227,6 +228,7 @@ def main():
 
         if face == 0:
             plt.title("Z-score Distributions Across Jiggle Rounds with Gaussian Fit and Error Bars")
+        plt.yscale('log')  # Logarithmic scale on y-axis
 
     plt.xlabel("z = (mean_jiggle - p_true) / sigma_jiggle")
     plt.tight_layout()
