@@ -216,7 +216,7 @@ def main():
         # Plot the t-distribution fit
         plt.plot(bin_centers, t_pdf, color='red', linestyle='-', label='t-Student fit')
 
-        plt.plot(bin_centers, t_pdf, color='green', linestyle='-.', label=f't-Student precomputed df/scale/loc = {J-1=}/1.0/0.0')
+        plt.plot(bin_centers, t2_pdf, color='green', linestyle='-.', label=f't-Student precomputed df/scale/loc = {J-1=}/1.0/0.0')
 
         # Add error bands around the Gaussian fit
         y_err_upper = gaussian(x_fit, popt[0] + amplitude_err, popt[1] + mean_err, popt[2] + stddev_err)
@@ -251,7 +251,7 @@ def main():
                 f"probs={p_true.tolist()}"
             )
             plt.title(f"Z-score Distributions with Gaussian and t-Student Fit\n{params_text}")
-        plt.yscale('log')  # Logarithmic scale on y-axis
+        # plt.yscale('log')  # Logarithmic scale on y-axis
 
     # Change y-axis to log scale
     plt.xlabel("z = (mean_jiggle - p_true) / scale_jiggle")
