@@ -41,6 +41,13 @@ def parse_arguments():
         help="Number of jiggle rounds (default: 50)"
     )
 
+    parser.add_argument(
+        "--semilogy",
+        action="store_true",
+        help="Use a semilog-y scale for the Z-score histogram plots."
+    )
+
+
     return parser.parse_args()
 
 # Gaussian function for fitting
@@ -95,7 +102,8 @@ def main():
     print(f"Beginning rounds of jiggling.")
     for r in range(JR):
         counts = np.random.multinomial(N, p_true)
-        jiggle_counts = np.random.poisson(counts, size=(J, K))
+        # jiggle_counts = np.random.poisson(counts, size=(J, K))
+        jiggle_counts = np.random.normal(loc=counts, scale=np.sqrt(counts), size=(J, K))
         jiggle_means = (jiggle_counts + 1) / np.sum(
             jiggle_counts + 1, axis=1
         )[:, None]
@@ -250,7 +258,9 @@ def main():
                 f"probs={p_true.tolist()}"
             )
             plt.title(f"Z-score Distributions with Gaussian and t-Student Fit\n{params_text}")
-        # plt.yscale('log')  # Logarithmic scale on y-axis
+
+        if args.semilogy:
+            plt.yscale('log')  # Logarithmic scale on y-axis
 
     # Change y-axis to log scale
     plt.xlabel("z = (mean_jiggle - p_true) / scale_jiggle")
