@@ -104,8 +104,12 @@ def main():
             first_round_jiggle_means = jiggle_means.copy()
 
         means = jiggle_means.mean(axis=0)
+
+        # below works very well
         stdevs = jiggle_means.std(axis=0, ddof=1)
-        scales = stdevs * sqrt(J/(J-1))  # Use student scale param, not gaussian sigma param
+        correction = sqrt(J/(J-1))  # Use student scale param, not gaussian sigma param
+
+        scales = stdevs * correction
 
         last_means = means
         last_stdevs = stdevs
