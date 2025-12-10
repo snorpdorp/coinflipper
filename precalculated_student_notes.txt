@@ -1,0 +1,41 @@
+
+Below is an extract of code and comments I made on how I got the best pre-calculated student distribution with no fitting.
+I have no idea why a second Bessel correction does anything, let alone make the data better.
+But it does.
+I tried 800 variations and parameter fittings and so on and so forth, but nothing beats J/(J-1)
+
+
+        means = jiggle_means.mean(axis=0)
+
+        # below works very well
+        # stdevs = jiggle_means.std(axis=0, ddof=1)
+        # correction = sqrt(J/(J-1))
+
+        # Above is identical to
+        stdevs = jiggle_means.std(axis=0, ddof=0)
+        correction = sqrt(J/(J-1)) # This changes ddof=0 to ddof=1
+        correction *= sqrt(J/(J-1))  # Why does repeating the bessel correction do anything, let alone make data better? It does though and nothing beats this.
+
+        # Above is identical to
+        # stdevs = jiggle_means.std(axis=0, ddof=0)
+        # correction = J/(J-1)  # Why?
+
+        # Try only leaving the myesterious second bessel correction in, but using correct corretion for first correction
+        # I have no fucking clue but this works
+        # stdevs = jiggle_means.std(axis=0, ddof=0)
+        # correction = sqrt(J/(J-1))  # ddof=1 correction
+        # correction *= sqrt((J-1)/(J-3))  # changes width so that scale=1
+        # correction /= J/(J-1)  # Everything was off by this amount
+
+        # Math too complicated, just going to fit the correct solution of form
+        # J^A (J-1)^B (J-3)^C (J-1.5-6/4/(J-5))^D
+        # .... it comes out to J/(J-1)
+        # stdevs = jiggle_means.std(axis=0, ddof=0)
+        # correction = 1
+
+        # Taking above J/(J-1) with some minor additional parameter fitting
+        # It's not as good as just J/(J-1)
+        # stdevs = jiggle_means.std(axis=0, ddof=0)
+        # correction = J/(J-1.10096379)
+
+        scales = stdevs * correction

@@ -104,15 +104,10 @@ def main():
             first_round_jiggle_means = jiggle_means.copy()
 
         means = jiggle_means.mean(axis=0)
-
-        # below works very well
-        stdevs = jiggle_means.std(axis=0, ddof=1)
-        correction = sqrt(J/(J-1))  # Use student scale param, not gaussian sigma param
-
-        scales = stdevs * correction
+        scales = jiggle_means.std(axis=0, ddof=0) * J/(J-1)  # student dist equiv of sigma
 
         last_means = means
-        last_stdevs = stdevs
+        last_scales = scales
 
         z = (means - p_true) / scales
         for face in range(K):
@@ -140,7 +135,7 @@ def main():
 
     plt.errorbar(
         x, last_means,
-        yerr=last_stdevs,
+        yerr=last_scales,
         fmt='o',
         color="black",
         capsize=4,
@@ -243,7 +238,7 @@ def main():
 
         # Display t-Student parameters
         df_text = f"$df = {df:.2f}$"
-        scale_text = f"$\\sigma = {scale:.2f}$"
+        scale_text = f"$\\sigma = {scale:.4f}$"
         plt.text(0.05, 0.55, df_text, transform=plt.gca().transAxes, fontsize=12, verticalalignment='top')
         plt.text(0.05, 0.45, scale_text, transform=plt.gca().transAxes, fontsize=12, verticalalignment='top')
 
